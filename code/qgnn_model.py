@@ -216,7 +216,7 @@ def display_final_example_circuit(n_qubits, trained_weights=None, input_data=Non
     for i in range(n_qubits - 1):
         qc.cx(i, i+1)
 
-    # Paramètres appris (ou aléatoires)
+    # Paramètres appris
     for i in range(n_qubits):
         qc.rz(float(trained_weights[i]), i)
 
@@ -238,7 +238,7 @@ if __name__ == "__main__":
     start_time = time.time()
     data_path = "/Users/mohamedsaoudi/Desktop/stage/Implementation/dataset1/FinanceCPT/returns/random-rels_20_1A_returns30007000.csv"
     rels_path = "/Users/mohamedsaoudi/Desktop/stage/Implementation/dataset1/FinanceCPT/relationships/random-rels_20_1A.csv"
-    num_vars = 25  # Mettre à 10 pour commencer
+    num_vars = 25 
     df, rels = load_financial_data(data_path, rels_path, num_vars)
     start_t = max(rels["lag"])
     dataset = generate_dataset(df, rels, num_vars, range(start_t + 1, start_t + 8))
