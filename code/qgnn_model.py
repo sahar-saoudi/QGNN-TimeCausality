@@ -258,3 +258,42 @@ if __name__ == "__main__":
     end_time = time.time()
     elapsed = end_time - start_time
     print(f" Total runtime: {elapsed:.2f} seconds ({elapsed / 60:.2f} minutes)")
+
+
+
+# ======================
+# 'Transfer learning'
+# ======================
+
+# Enregistrement des parametres
+torch.save({
+    'rz_weights': model.quantum.weights.detach(),
+    'fc_weights': model.fc.state_dict()
+}, "model_transfer_params.pt")
+
+class QGNNTransferModel(nn.Module):
+    def __init__(self, num_nodes, pretrained_rz, fc_state_dict):
+        super().__init__()
+        self.quantum = QiskitQuantumLayer(num_nodes)
+        self.quantum.weights = nn.Parameter(pretrained_rz, requires_grad=False)
+        self.fc = nn.Linear(num_nodes, num_nodes * num_nodes)
+        self.fc.load_state_dict(fc_state_dict) 
+        for param in self.fc.parameters():
+            param.requires_grad = False  
+
+    def forward(self, data):
+        q_out = self.quantum(data.x)
+        logits = self.fc(q_out)
+        return logits
+
+
+# Charger les poids/parametres
+checkpoint = torch.load("model_transfer_params.pt")
+rz_weights = checkpoint['rz_weights']
+fc_state_dict = checkpoint['fc_weights']
+
+# Créer le modèle de test
+transfer_model = QGNNTransferModel(num_nodes=num_vars, pretrained_rz=rz_weights, fc_state_dict=fc_state_dict)
+
+# Évaluation sur le même dataset
+evaluate(transfer_model, loader, num_nodes=num_vars)
